@@ -7,7 +7,7 @@ def optional_float(number: str) -> float | None:
     try:
         return float(number)
     except:
-        return False
+        return None
     
 def optional_int(number: str) -> int | None:
     if number == '':
@@ -15,7 +15,7 @@ def optional_int(number: str) -> int | None:
     try:
         return int(number)
     except:
-        return False
+        return None
     
 def randomstr(length: int = 8) -> str:
     return ''.join(['{:x}'.format(random.randint(0, 15)) for _ in range(length)])
