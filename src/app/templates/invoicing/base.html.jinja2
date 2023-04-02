@@ -1,0 +1,9 @@
+{% extends "base.html.jinja2" %}
+
+{% block nav %}
+    {{ super() }}
+    <div class="nav">
+        <a href="{{ url_for('invoicing.home') }}">List</a>
+        <a href="{{ url_for('invoicing.add') }}">Add</a>
+    </div>
+{% endblock nav %}

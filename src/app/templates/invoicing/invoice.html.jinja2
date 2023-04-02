@@ -1,0 +1,13 @@
+{% extends "invoicing/base.html.jinja2" %}
+
+{% block html_body %}
+    <h2>Invoice #{{ invoice_id }}</h2>
+    <form action="{{ url_for('invoicing.invoice', invoice_id=invoice_id) }}" method="post">
+        <p>File</p>
+        <input type="text" name="file">
+        <p>Amount</p>
+        <input type="text" name="invoice_amount" required>
+
+        <input type="submit" value="Save">
+    </form>
+{% endblock html_body %}

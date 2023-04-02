@@ -1,0 +1,23 @@
+{% extends "billing/base.html.jinja2" %}
+
+{% block html_body %}
+    {% if billing_positions %}
+    <table>
+        <tr>
+            <th>Date</th>
+            <th>File</th>
+            <th>Action</th>
+        </tr>
+        {% for billing_position in billing_positions %}
+        <tr>
+            <td>{{ billing_position.date }}</td>
+            <td>{{ billing_position.file }}</td>
+            <td>
+                <a class="simple" href="{{ url_for('billing.remove', billing_position_id=billing_position.id) }}">❌</a>
+                <a class="simple" href="{{ url_for('billing.edit', billing_position_id=billing_position.id) }}">✏️</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+{% endblock html_body %}

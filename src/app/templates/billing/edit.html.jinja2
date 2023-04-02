@@ -1,0 +1,26 @@
+{% extends "billing/base.html.jinja2" %}
+
+{% block html_body %}
+    <h2>Edit Billing Position</h2>
+    <form action="{{ url_for('billing.edit', billing_position_id=billing_position.id) }}" method="post">
+        <p>Date</p>
+        <input type="date" name="date" id="input-date" value="{{ billing_position.date }}" required>
+        <p>File</p>
+        <input type="text" name="file" value="{{ billing_position.file }}" required>
+        <p>Hourly Rate</p>
+        <input type="text" name="hourly_rate" value="{{ billing_position.hourly_rate }}">
+        <p>Billed Hours</p>
+        <input type="text" name="billed_hours" value="{{ billing_position.billed_hours }}">
+        <p>Earned Percentage</p>
+        <input type="text" name="earned_percentage" value="30">
+        <p>Earned Amount</p>
+        <input type="text" name="earned_amount" value="{{ billing_position.earned_amount }}">
+        <p>Invoiced Amount</p>
+        <input type="text" name="invoiced_amount" value="{{ billing_position.invoiced_amount }}">
+
+        <input type="hidden" name="invoice_id" value="{{ billing_position.invoice_id }}">
+
+        <input type="submit" value="Update">
+    </form>
+
+{% endblock html_body %}

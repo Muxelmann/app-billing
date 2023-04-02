@@ -1,0 +1,22 @@
+{% extends "billing/base.html.jinja2" %}
+
+{% block html_body %}
+    <h2>Add Billing Position</h2>
+    <form action="{{ url_for('billing.add') }}" method="post">
+        <p>Date</p>
+        <input type="date" name="date" id="input-date" required>
+        <p>File</p>
+        <input type="text" name="file" required>
+        <p>Hourly Rate</p>
+        <input type="text" name="hourly_rate">
+        <p>Billed Hours</p>
+        <input type="text" name="billed_hours">
+        <p>Earned Percentage</p>
+        <input type="text" name="earned_percentage" value="30">
+        <p>Earned Amount</p>
+        <input type="text" name="earned_amount">
+        
+        <input type="submit" value="Save">
+    </form>
+
+{% endblock html_body %}

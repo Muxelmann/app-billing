@@ -1,0 +1,18 @@
+{% extends "invoicing/base.html.jinja2" %}
+
+{% block html_body %}
+    {% if invoices %}
+    <table>
+        <tr>
+            <th>Date</th>
+            <th>Total</th>
+        </tr>
+        {% for invoice in invoices %}
+        <tr>
+            <td>{{ invoice.date }}</td>
+            <td>{{ '%0.2f' % invoice.total }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+{% endblock html_body %}

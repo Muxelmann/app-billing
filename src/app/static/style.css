@@ -1,0 +1,104 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: sans-serif;
+}
+
+.main-wrapper {
+    max-width: 30rem;
+    margin: 1rem auto;
+}
+
+a, a:visited {
+    color: #1e7fa6;
+    text-decoration: none;
+}
+
+a:hover, a:active {
+    text-decoration: underline;
+}
+
+a.simple:hover, a.simple:active {
+    text-decoration: none;
+}
+
+.nav, h1, h2, h3, h4, h5, h6, p, ul, ol, li, table, input, pre {
+    margin-bottom: 1rem;
+}
+
+.nav {
+    display: flex;
+}
+
+.nav > * {
+    margin-right: 1rem;
+}
+
+.nav > *:last-child {
+    margin-right: 0;
+}
+
+.messages {
+    list-style: none;
+}
+
+.messages li {
+    padding: 1rem;
+    border: 2px solid #000000;
+}
+
+.messages li.error {
+    border-color: #e01818;
+}
+
+.messages li.info {
+    border-color: #1e7fa6;
+}
+
+table {
+    border-spacing: 0;
+    width: 100%;
+}
+
+table th {
+    text-align: right;
+}
+
+table td {
+    font-family: monospace;
+    text-align: right;
+    height: 1.4rem;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form .label {
+    margin-bottom: 0.25rem;
+    color: #8c8c8c;
+}
+
+input[type=submit] {
+    padding: 0.3rem;
+    border: 1px solid #000000;
+    background-color: #ffffff;
+    border-radius: 0;
+}
+
+input[type=submit]:hover {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+input[type=submit].danger {
+    border-color: #e01818;
+}
+
+input[type=submit].danger:hover {
+    background-color: #e01818;
+}
