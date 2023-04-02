@@ -1,5 +1,15 @@
 # Readme
 
+This is a little web based app to manage my billings as a patent attorney. It presently supports only on user **without any security**!
+
+You can add a billing position, modify and delet it. You can also add an Invoice and assign the file and invoiced amount, which automatically registers all billing positions not already invoiced.
+
+It is mostly my own tool to keep track of my billable hours in addition to the internal system used at the law firm I am working at.
+
+![](https://raw.githubusercontent.com/Muxelmann/app-billing/main/media/home.png)
+
+![](https://raw.githubusercontent.com/Muxelmann/app-billing/main/media/billing.png)
+
 ## Create virtual environment
 
 Create a virtual environment, activate it and install dependent modules by using the followings script:
