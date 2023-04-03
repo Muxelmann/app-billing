@@ -42,6 +42,8 @@ docker run -p 8080:80 IMAGE_NAME
 
 ## For Docker Hub
 
+The built docker container is available [here](https://hub.docker.com/repository/docker/muxelmann/billing/general).
+
 Build using:
 
 ```shell
