@@ -1,6 +1,6 @@
 # Readme
 
-This is a little web based app to manage my billings as a patent attorney. It presently supports only on user **without any security**!
+This is a little web based app to manage my billings as a patent attorney. It presently supports only one user **without any security**!
 
 You can add a billing position, modify and delet it. You can also add an Invoice and assign the file and invoiced amount, which automatically registers all billing positions not already invoiced.
 
