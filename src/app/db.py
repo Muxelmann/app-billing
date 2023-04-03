@@ -1,4 +1,5 @@
 import os
+import shutil
 from datetime import datetime
 import sqlite3
 from sqlite3 import Error
@@ -6,13 +7,14 @@ from flask import Flask
 from .utils import optional_float, optional_int
 
 class DB:
+    last_backup = None
 
     def __init__(self, app: Flask) -> None:
-        db_path = os.path.join(app.instance_path, 'db.sqlite')
+        self.db_path = os.path.join(app.instance_path, 'db.sqlite')
         
         self.connection = None
         try:
-            self.connection = sqlite3.connect(db_path)
+            self.connection = sqlite3.connect(self.db_path)
         except Error as e:
             print(e)
             return
@@ -34,6 +36,14 @@ class DB:
             'invoice_id integer',
             'FOREIGN KEY(invoice_id) REFERENCES invoices(id)'
         ])
+
+    def backup(self) -> bool:
+        if DB.last_backup is not None and DB.last_backup + 1800 > round(datetime.timestamp(datetime.now())):
+            return False
+        
+        DB.last_backup = round(datetime.timestamp(datetime.now()))
+        shutil.copyfile(self.db_path, f"{self.db_path}.backup-{DB.last_backup}")
+        return True
 
     def get_statistics(self) -> list | None:
         sql = '''

@@ -29,33 +29,6 @@
         {% endwith %}
 
         {% block html_body %}
-            <h2>Home</h2>
-            {% if statistics %}
-            <table>
-                <tr>
-                    <th>Year</th>
-                    <th>Positions</th>
-                    <th>Billed</th>
-                    <th>Earned</th>
-                    <th>Invoiced</th>
-                </tr>
-                {% for statistic in statistics %}
-                    <tr>
-                        <td>
-                        {% if statistic.year %}
-                            {{ statistic.year }}
-                        {% else %}
-                            Total
-                        {% endif %}
-                        </td>
-                        <td>{{ statistic.count_positions }}</td>
-                        <td>{{ '%0.2f' % statistic.total_billed }}</td>
-                        <td>{{ '%0.2f' % statistic.total_earned }}</td>
-                        <td>{{ '%0.2f' % statistic.total_invoiced }}</td>
-                    </tr>
-                {% endfor %}
-            </table>
-            {% endif %}
         {% endblock html_body %}
     </div>
 </body>

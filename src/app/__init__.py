@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, current_app
+from flask import Flask, render_template, current_app, request, redirect, url_for, flash
 from .db import DB
 
 def make_app(secret_key: str) -> Flask:
@@ -21,8 +21,17 @@ def make_app(secret_key: str) -> Flask:
         database = DB(current_app)
 
         return render_template(
-            'base.html.jinja2',
+            'home.html.jinja2',
             statistics=database.get_statistics()
         )
+
+    @app.route('/backup', methods=['GET', 'POST'])
+    def backup():
+        if request.method == 'POST':
+            database = DB(current_app)
+            if not database.backup():
+                flash(('error', 'DB backup failed (you can only backup every 30 minutes).'))
+        return redirect(url_for('home'))
+        
 
     return app
