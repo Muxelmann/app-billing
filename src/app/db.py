@@ -187,56 +187,55 @@ class DB:
 
         return billing_positions
     
-    def count_uninvoiced(self, file: str) -> int | None:
+    def get_open_billing_positions(self, file: str = None) -> list:
 
-        sql = '''
-            SELECT count(id)
-            FROM billing_positions
-            WHERE file = ? AND invoice_id IS NULL;
-        '''
         cursor = self.connection.cursor()
-        cursor.execute(sql, (file, ))
+
+        if file is not None:
+            sql = '''
+                SELECT id, date, file, earned_amount
+                FROM billing_positions
+                WHERE invoice_id IS NULL AND file = ?
+                ORDER BY date;
+            '''
+            cursor.execute(sql, (file, ))
+        else:
+            sql = '''
+                SELECT id, date, file, earned_amount
+                FROM billing_positions
+                WHERE invoice_id IS NULL
+                ORDER BY date;
+            '''
+            cursor.execute(sql,)
+
         rows = cursor.fetchall()
 
-        if len(rows) != 1:
-            return None
-        
-        return int(rows[0][0])
+        open_billing_positions = []
+        for row in rows:
+            open_billing_positions.append({
+                'id': row[0],
+                'date': datetime.strptime(str(row[1]), '%Y%m%d').date(),
+                'file': row[2],
+                'earned_amount': row[3]
+            })
 
-    def invoice_billing_positions(self,
-        file: str, 
+        return open_billing_positions
+
+    def invoice_billing_position(self,
+        id: int, 
         invoiced_amount: float,
         invoice_id: int
         ) -> None:
 
-        count = self.count_uninvoiced(file)
+        sql = '''
+            UPDATE billing_positions
+            SET invoiced_amount = ?, invoice_id = ?
+            WHERE id = ?;
+        '''
 
-        if count == 0:
-            raise Exception(f'NOTHING TO INVOICE FOR {file}!')
-
-        if count > 0:
-            sql = '''
-                UPDATE billing_positions
-                SET invoiced_amount = ?, invoice_id = ?
-                WHERE file = ? AND invoiced_amount IS NULL
-                ORDER BY date DESC
-                LIMIT 1;
-            '''
-
-            cursor = self.connection.cursor()
-            cursor.execute(sql, (invoiced_amount, invoice_id, file))
-            self.connection.commit()
-
-        if count > 1:
-            sql = '''
-                UPDATE billing_positions
-                SET invoiced_amount = 0.0, invoice_id = ?
-                WHERE file = ? AND invoiced_amount IS NULL;
-            '''
-
-            cursor = self.connection.cursor()
-            cursor.execute(sql, (invoice_id, file))
-            self.connection.commit()
+        cursor = self.connection.cursor()
+        cursor.execute(sql, (invoiced_amount, invoice_id, id))
+        self.connection.commit()
 
     def add_invoice(self, date: datetime) -> int:
         sql = 'INSERT INTO invoices (date) VALUES (?);'
@@ -248,12 +247,11 @@ class DB:
 
     def get_all_invoices(self) -> list:
         sql = '''
-            SELECT invoices.date AS date, sum(billing_positions.invoiced_amount) AS total
-            FROM billing_positions
-            JOIN invoices ON billing_positions.invoice_id = invoices.id
-            WHERE invoice_id IS NOT NULL
-            GROUP BY invoice_id
-            ORDER BY date;
+            SELECT invoices.id, invoices.date, sum(billing_positions.invoiced_amount)
+            FROM invoices
+            LEFT OUTER JOIN billing_positions ON invoices.id = billing_positions.invoice_id
+            GROUP BY invoices.id
+            ORDER BY invoices.date;
         '''
         cursor = self.connection.cursor()
         cursor.execute(sql)
@@ -261,9 +259,11 @@ class DB:
 
         invoices = []
         for row in rows:
+            total = 0.0 if row[2] is None else row[2]
             invoices.append({
-                "date": datetime.strptime(str(row[0]), '%Y%m%d').date(),
-                "total": round(row[1], 2)
+                'id': int(row[0]),
+                'date': datetime.strptime(str(row[1]), '%Y%m%d').date(),
+                'total': round(total, 2)
             })
 
         return invoices

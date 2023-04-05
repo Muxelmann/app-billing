@@ -6,11 +6,15 @@
         <tr>
             <th>Date</th>
             <th>Total</th>
+            <th>Action</th>
         </tr>
         {% for invoice in invoices %}
         <tr>
             <td>{{ invoice.date }}</td>
             <td>{{ '%0.2f' % invoice.total }}</td>
+            <td>
+                <a href="{{ url_for('invoicing.invoice', invoice_id=invoice.id) }}">💰</a>
+            </td>
         </tr>
         {% endfor %}
     </table>

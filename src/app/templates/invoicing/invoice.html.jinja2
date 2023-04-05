@@ -2,12 +2,37 @@
 
 {% block html_body %}
     <h2>Invoice #{{ invoice_id }}</h2>
+    {% if open_billing_positions %}
     <form action="{{ url_for('invoicing.invoice', invoice_id=invoice_id) }}" method="post">
-        <p>File</p>
-        <input type="text" name="file">
-        <p>Amount</p>
+        <p>Select open billing positions:</p>
+        <table>
+            <tr>
+                <th></th>
+                <th>Date</th>
+                <th>File</th>
+                <th>Billed</th>
+            </tr>
+            {% for open_billing_position in open_billing_positions %}
+            <tr>
+                <td><input type="checkbox" name="file_id[]" value="{{ open_billing_position['id'] }}"></td>
+                <td>{{ open_billing_position['date'] }}</td>
+                <td>{{ open_billing_position['file'] }}</td>
+                <td>{{ open_billing_position['earned_amount'] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <p>Invoice Amount:</p>
         <input type="text" name="invoice_amount" required>
 
-        <input type="submit" value="Save">
+        <input type="submit" value="Invoice">
     </form>
+    {% else %}
+    <form action="{{ url_for('invoicing.invoice', invoice_id=invoice_id) }}" method="POST">
+        <p>File to add:</p>
+        <input type="text" name="file" required>
+
+        <input type="submit" value="Load File">
+    </form>
+    {% endif %}
 {% endblock html_body %}

@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Flask, Blueprint, render_template, current_app, request, url_for, redirect, flash
+from flask import Flask, Blueprint, render_template, current_app, request, url_for, redirect, flash, abort
 from .db import DB
 from .utils import optional_float
 
@@ -35,7 +35,6 @@ def register(app: Flask) -> Blueprint:
 
     @bp.route('/invoice/<int:invoice_id>', methods=['GET', 'POST'])
     def invoice(invoice_id: int):
-        database = DB(current_app)
 
         if request.method == 'GET':
             return render_template(
@@ -43,15 +42,29 @@ def register(app: Flask) -> Blueprint:
                 invoice_id=invoice_id
             )
         
-        file = request.form.get('file').replace(' ', '')
+        file = request.form.get('file')
+        database = DB(current_app)
+        if file is not None:
+            open_billing_positions = database.get_open_billing_positions(file.replace(' ', ''))
+            return render_template(
+                'invoicing/invoice.html.jinja2',
+                invoice_id=invoice_id,
+                open_billing_positions=open_billing_positions
+            )
+
         invoice_amount = optional_float(request.form.get('invoice_amount'))
 
         if invoice_amount is None:
             flash(('error', f'Amount for invoice not valid.'))
             redirect(url_for('.invoice', invoice_id=invoice_id))
 
-        database.invoice_billing_positions(file, invoice_amount, invoice_id)
-        flash(('info', f'Successfully invoiced for file {file}.'))
+        file_ids_to_invoice = [int(id) for id in request.form.getlist('file_id[]')]
+        for index, file_id in enumerate(file_ids_to_invoice):
+            if index < len(file_ids_to_invoice) - 1:
+                database.invoice_billing_position(file_id, 0.0, invoice_id)
+            else:
+                database.invoice_billing_position(file_id, invoice_amount, invoice_id)
+                flash(('info', f'Successfully invoiced an amount of {invoice_amount}.'))
         return redirect(url_for('.invoice', invoice_id=invoice_id))
 
     app.register_blueprint(bp)
