@@ -71,6 +71,7 @@ def register(app: Flask) -> None:
             return redirect(url_for('.remove', billing_position_id=billing_position_id))
 
         database.remove_billable_position(billing_position_id)
+        flash(('info', 'Successfully removed billing position'))
         return redirect(url_for('.home'))
 
     @bp.route('/add', methods=['GET', 'POST'])
