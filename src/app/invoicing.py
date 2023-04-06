@@ -67,4 +67,22 @@ def register(app: Flask) -> Blueprint:
                 flash(('info', f'Successfully invoiced an amount of {invoice_amount}.'))
         return redirect(url_for('.invoice', invoice_id=invoice_id))
 
+    @bp.route('/remove/<int:invoice_id>', methods=['GET', 'POST'])
+    def remove(invoice_id: int):
+        database = DB(current_app)
+
+        if request.method == 'GET':
+            return render_template(
+                'invoicing/remove.html.jinja2',
+                invoice=database.get_invoice(invoice_id)
+            )
+    
+        if request.form.get('confirmation') != 'yes':
+            flash(('error', 'Removing not confirmed properly'))
+            return redirect(url_for('.remove', invoice_id=invoice_id))
+        
+        database.remove_invoice(invoice_id)
+        flash(('info', 'Successfully removed invoice'))
+        return redirect(url_for('.home'))
+
     app.register_blueprint(bp)

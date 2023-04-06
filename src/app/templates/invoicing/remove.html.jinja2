@@ -1,0 +1,14 @@
+{% extends "invoicing/base.html.jinja2" %}
+
+{% block html_body %}
+    <h2>Remove Invoice</h2>
+    <form action="{{ url_for('invoicing.remove', invoice_id=invoice.id) }}" method="post">
+        <p>Date</p>
+        <input type="text" value="{{ invoice.date }}" disabled>
+        <p>Total Invoiced Amount</p>
+        <input type="text" value="{{ invoice.total_invoiced_amount }}" disabled>
+        
+        <input type="hidden" name="confirmation" value="yes">
+        <input class="danger" type="submit" value="Delete">
+    </form>
+{% endblock html_body %}

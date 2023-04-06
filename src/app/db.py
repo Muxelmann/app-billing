@@ -267,3 +267,43 @@ class DB:
             })
 
         return invoices
+    
+    def remove_invoice(self, id: int) -> None:
+        sql = '''
+            UPDATE billing_positions
+            SET invoiced_amount = NULL, invoice_id = NULL
+            WHERE invoice_id = ?;
+        '''
+    
+        cursor = self.connection.cursor()
+        cursor.execute(sql, (id, ))
+
+        sql = '''
+            DELETE FROM invoices
+            WHERE id = ?
+        '''
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql, (id, ))
+        self.connection.commit()
+
+    def get_invoice(self, id: int) -> dict | None:
+        sql = '''
+            SELECT invoices.id, invoices.date, sum(billing_positions.invoiced_amount)
+            FROM invoices
+            LEFT OUTER JOIN billing_positions ON invoices.id = billing_positions.invoice_id
+            WHERE invoices.id = ?
+            GROUP BY invoices.id;
+        '''
+        cursor = self.connection.cursor()
+        cursor.execute(sql, (id, ))
+        rows = cursor.fetchall()
+
+        if len(rows) != 1:
+            return None
+        
+        return {
+            'id': int(rows[0][0]),
+            'date': datetime.strptime(str(rows[0][1]), '%Y%m%d').date(),
+            'total_invoiced_amount': rows[0][2]
+        }
