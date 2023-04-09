@@ -19,6 +19,8 @@ class DB:
             print(e)
             return
         
+        self.cursor = self.connection.cursor()
+        
         self.create_table('invoices', [
             'id integer PRIMARY KEY',
             'date integer NOT NULL'
@@ -37,6 +39,12 @@ class DB:
             'FOREIGN KEY(invoice_id) REFERENCES invoices(id)'
         ])
 
+    def execute(self, sql: str, parameters: tuple = (), commit: bool = False) -> tuple[int | None, list]:
+        self.cursor.execute(sql, parameters)
+        if commit:
+            self.connection.commit()
+        return self.cursor.lastrowid, self.cursor.fetchall()
+
     def backup(self) -> bool:
         if DB.last_backup is not None and DB.last_backup + 1800 > round(datetime.timestamp(datetime.now())):
             return False
@@ -50,24 +58,22 @@ class DB:
             SELECT
                 NULL AS year,
                 count(id) AS count_positions,
-                sum(billed_amount) AS total_billed,
-                sum(earned_amount) AS total_earned,
-                sum(invoiced_amount) AS total_invoiced
+                IFNULL(sum(billed_amount), 0) AS total_billed,
+                IFNULL(sum(earned_amount), 0) AS total_earned,
+                IFNULL(sum(invoiced_amount), 0) AS total_invoiced
             FROM billing_positions
             UNION
             SELECT
                 date / 10000 AS year,
                 count(id) AS count_positions,
-                sum(billed_amount) AS total_billed,
-                sum(earned_amount) AS total_earned,
-                sum(invoiced_amount) AS total_invoiced
+                IFNULL(sum(billed_amount), 0) AS total_billed,
+                IFNULL(sum(earned_amount), 0) AS total_earned,
+                IFNULL(sum(invoiced_amount), 0) AS total_invoiced
             FROM billing_positions
             GROUP BY year
             ORDER BY year;
         '''
-        cursor = self.connection.cursor()
-        cursor.execute(sql)
-        rows = cursor.fetchall()
+        _, rows = self.execute(sql)
 
         statistics = []
         try:
@@ -85,13 +91,11 @@ class DB:
         return statistics
 
     def create_table(self, table_name: str, columns: list[str]) -> None:
-
         column_placeholders = ', '.join(columns)
         sql = f'CREATE TABLE IF NOT EXISTS {table_name} ({column_placeholders});'
 
         try:
-            cursor = self.connection.cursor()
-            cursor.execute(sql)
+            self.execute(sql, commit=True)
         except Error as e:
             print(e)
 
@@ -101,9 +105,7 @@ class DB:
             WHERE id = ?
         '''
 
-        cursor = self.connection.cursor()
-        cursor.execute(sql, (id, ))
-        self.connection.commit()
+        self.execute(sql, (id, ), commit=True)
 
     def add_billing_position(self,
         date: datetime,
@@ -118,10 +120,7 @@ class DB:
             INSERT INTO billing_positions (date, file, hourly_rate, billed_hours, billed_amount, earned_amount)
             VALUES (?, ?, ?, ?, ?, ?);
         '''
-        cursor = self.connection.cursor()
-        cursor.execute(sql, (date.date().strftime('%Y%m%d'), file, hourly_rate, billed_hours, billed_amount, earned_amount))
-        self.connection.commit()
-        # return cursor.lastrowid
+        self.execute(sql, (date.date().strftime('%Y%m%d'), file, hourly_rate, billed_hours, billed_amount, earned_amount), commit=True)
     
     def update_billing_position(self,
         id: int,
@@ -130,29 +129,25 @@ class DB:
         hourly_rate: float,
         billed_hours: float,
         billed_amount: float,
-        earned_amount: float,
-        invoiced_amount: float
+        earned_amount: float
         ) -> None:
         sql = '''
             UPDATE billing_positions
-            SET date = ?, file = ?, hourly_rate = ?, billed_hours = ?, billed_amount = ?, earned_amount = ?, invoiced_amount = ?
+            SET date = ?, file = ?, hourly_rate = ?, billed_hours = ?, billed_amount = ?, earned_amount = ?
             WHERE id = ?;
         '''
 
-        cursor = self.connection.cursor()
-        cursor.execute(sql, (date.date().strftime('%Y%m%d'), file, hourly_rate, billed_hours, billed_amount, earned_amount, invoiced_amount, id))
-        self.connection.commit()
+        self.execute(sql, (date.date().strftime('%Y%m%d'), file, hourly_rate, billed_hours, billed_amount, earned_amount, id), commit=True)
 
     def get_billing_position(self, id: int) -> dict | None:
         sql = '''
             SELECT id, date, file, hourly_rate, billed_hours, billed_amount, earned_amount, invoiced_amount, invoice_id
             FROM billing_positions
             WHERE id = ?
+            ORDER BY date;
         '''
-        cursor = self.connection.cursor()
-        cursor.execute(sql, (id, ))
-        rows = cursor.fetchall()
-
+        _, rows = self.execute(sql, (id, ))
+        
         if len(rows) != 1:
             return None
         
@@ -172,11 +167,10 @@ class DB:
         sql = '''
             SELECT id, date, file
             FROM billing_positions
+            ORDER BY date;
             '''
-        cursor = self.connection.cursor()
-        cursor.execute(sql)
-        rows = cursor.fetchall()
-
+        _, rows = self.execute(sql)
+        
         billing_positions = []
         for row in rows:
             billing_positions.append({
@@ -187,29 +181,16 @@ class DB:
 
         return billing_positions
     
-    def get_open_billing_positions(self, file: str = None) -> list:
+    def get_open_billing_positions(self, file: str) -> list:
 
-        cursor = self.connection.cursor()
-
-        if file is not None:
-            sql = '''
-                SELECT id, date, file, earned_amount
-                FROM billing_positions
-                WHERE invoice_id IS NULL AND file = ?
-                ORDER BY date;
-            '''
-            cursor.execute(sql, (file, ))
-        else:
-            sql = '''
-                SELECT id, date, file, earned_amount
-                FROM billing_positions
-                WHERE invoice_id IS NULL
-                ORDER BY date;
-            '''
-            cursor.execute(sql,)
-
-        rows = cursor.fetchall()
-
+        sql = '''
+            SELECT id, date, file, earned_amount
+            FROM billing_positions
+            WHERE invoice_id IS NULL AND file = ?
+            ORDER BY date;
+        '''
+        _, rows = self.execute(sql, (file, ))
+        
         open_billing_positions = []
         for row in rows:
             open_billing_positions.append({
@@ -220,6 +201,28 @@ class DB:
             })
 
         return open_billing_positions
+
+    def get_invoiced_billing_positions(self, invoice_id: int) -> list:
+        
+        sql = '''
+            SELECT id, date, file, earned_amount, invoiced_amount
+            FROM billing_positions
+            WHERE invoice_id = ?
+            ORDER BY file, date;
+        '''
+        _, rows = self.execute(sql, (invoice_id, ))
+
+        invoiced_billing_positions = []
+        for row in rows:
+            invoiced_billing_positions.append({
+                'id': row[0],
+                'date': datetime.strptime(str(row[1]), '%Y%m%d').date(),
+                'file': row[2],
+                'earned_amount': row[3],
+                'invoiced_amount': row[4]
+            })
+
+        return invoiced_billing_positions
 
     def invoice_billing_position(self,
         id: int, 
@@ -233,33 +236,27 @@ class DB:
             WHERE id = ?;
         '''
 
-        cursor = self.connection.cursor()
-        cursor.execute(sql, (invoiced_amount, invoice_id, id))
-        self.connection.commit()
-
+        self.execute(sql, (invoiced_amount, invoice_id, id), commit=True)
+        
     def add_invoice(self, date: datetime) -> int:
         sql = 'INSERT INTO invoices (date) VALUES (?);'
-        cursor = self.connection.cursor()
-        cursor.execute(sql, (date.date().strftime('%Y%m%d'), ))
-        self.connection.commit()
         
-        return cursor.lastrowid
+        last_row_id, _ = self.execute(sql, (date.date().strftime('%Y%m%d'), ), commit=True)
+        return last_row_id
 
     def get_all_invoices(self) -> list:
         sql = '''
-            SELECT invoices.id, invoices.date, sum(billing_positions.invoiced_amount)
+            SELECT invoices.id, invoices.date, IFNULL(sum(billing_positions.invoiced_amount), 0)
             FROM invoices
             LEFT OUTER JOIN billing_positions ON invoices.id = billing_positions.invoice_id
             GROUP BY invoices.id
             ORDER BY invoices.date;
         '''
-        cursor = self.connection.cursor()
-        cursor.execute(sql)
-        rows = cursor.fetchall()
-
+        _, rows = self.execute(sql)
+        
         invoices = []
         for row in rows:
-            total = 0.0 if row[2] is None else row[2]
+            total = row[2]
             invoices.append({
                 'id': int(row[0]),
                 'date': datetime.strptime(str(row[1]), '%Y%m%d').date(),
@@ -275,18 +272,15 @@ class DB:
             WHERE invoice_id = ?;
         '''
     
-        cursor = self.connection.cursor()
-        cursor.execute(sql, (id, ))
+        self.execute(sql, (id, ))
 
         sql = '''
             DELETE FROM invoices
             WHERE id = ?
         '''
 
-        cursor = self.connection.cursor()
-        cursor.execute(sql, (id, ))
-        self.connection.commit()
-
+        self.execute(sql, (id, ), commit=True)
+        
     def get_invoice(self, id: int) -> dict | None:
         sql = '''
             SELECT invoices.id, invoices.date, sum(billing_positions.invoiced_amount)
@@ -295,10 +289,8 @@ class DB:
             WHERE invoices.id = ?
             GROUP BY invoices.id;
         '''
-        cursor = self.connection.cursor()
-        cursor.execute(sql, (id, ))
-        rows = cursor.fetchall()
-
+        _, rows = self.execute(sql, (id, ))
+        
         if len(rows) != 1:
             return None
         

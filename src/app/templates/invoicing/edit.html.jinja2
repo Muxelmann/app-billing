@@ -1,10 +1,33 @@
 {% extends "invoicing/base.html.jinja2" %}
 
 {% block html_body %}
-    <h2>Edit Invoice {{ invoice_id }}</h2>
-    <form action="{{ url_for('invoicing.edit') }}" method="post">
+    <h2>Edit Invoice {{ invoice.id }}</h2>
+    <form action="{{ url_for('invoicing.edit', invoice_id=invoice.id) }}" method="post">
         <p class="label">Date</p>
-        <input type="date" name="date" id="input-date" required>
+        <input type="date" name="date" value="{{ invoice.date }}" required>
+
+        <p class="label">Invoiced Billing Positions</p>
+        <table>
+            <tr>
+                <th>File</th>
+                <th>Date</th>
+                <th>Earned</th>
+                <th>Invoiced</th>
+                <th>Action</th>
+            </tr>
+            {% for billing_position in invoiced_billing_positions %}
+            <tr>
+                <td>{{ billing_position.file }}</td>
+                <td>{{ billing_position.date }}</td>
+                <td>{{ billing_position.earned_amount }}</td>
+                <td>
+                    <input type="hidden" name="invoiced_amount[]" value="{{ billing_position.id }}">
+                    <input type="text" name="invoiced_amount[]" value="{{ billing_position.invoiced_amount }}" required>
+                </td>
+                <td></td>
+            </tr>
+            {% endfor %}
+        </table>
 
         <input type="submit" value="Save">
     </form>

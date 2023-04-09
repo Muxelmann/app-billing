@@ -71,6 +71,13 @@ table td {
     font-family: monospace;
     text-align: right;
     height: 1.4rem;
+    vertical-align: middle;
+}
+
+table td input {
+    margin: 0;
+    font-family: monospace;
+    text-align: right;
 }
 
 form {

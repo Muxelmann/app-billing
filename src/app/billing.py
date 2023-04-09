@@ -40,8 +40,7 @@ def register(app: Flask) -> None:
         billed_amount = None
         earned_percentage = optional_float(request.form.get('earned_percentage'))
         earned_amount = optional_float(request.form.get('earned_amount'))
-        invoiced_amount = optional_float(request.form.get('invoiced_amount'))
-
+        
         if not isinstance(earned_amount, float):
             if not all([v is not None for v in (hourly_rate, billed_hours, earned_percentage)]):
                 flash(('error', 'The entry contains errors. Please provice either an Earned Amount or the combination of Rate, Hours and Percentage.'))
@@ -51,7 +50,7 @@ def register(app: Flask) -> None:
             earned_amount = billed_amount * earned_percentage / 100.0
 
         database = DB(current_app)
-        database.update_billing_position(billing_position_id, date, file, hourly_rate, billed_hours, billed_amount, earned_amount, invoiced_amount)
+        database.update_billing_position(billing_position_id, date, file, hourly_rate, billed_hours, billed_amount, earned_amount)
 
         flash(('info', f'Sucessfully edited billing position for file {file}.'))
         return redirect(url_for('.edit', billing_position_id=billing_position_id))

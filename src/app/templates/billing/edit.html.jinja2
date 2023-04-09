@@ -15,12 +15,6 @@
         <input type="text" name="earned_percentage">
         <p>Earned Amount</p>
         <input type="text" name="earned_amount" value="{{ billing_position.earned_amount }}">
-        {% if billing_position.invoiced_amount %}
-            <p>Invoiced Amount</p>
-            <input type="text" name="invoiced_amount" value="{{ billing_position.invoiced_amount }}">
-            <input type="hidden" name="invoice_id" value="{{ billing_position.invoice_id }}">
-        {% endif %}
-
 
         <input type="submit" value="Update">
     </form>

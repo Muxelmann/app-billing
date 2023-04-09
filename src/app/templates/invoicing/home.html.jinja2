@@ -13,7 +13,7 @@
             <td>{{ invoice.date }}</td>
             <td>{{ '%0.2f' % invoice.total }}</td>
             <td>
-                <a href="{{ url_for('invoicing.invoice', invoice_id=invoice.id) }}">💰</a>
+                <a href="{{ url_for('invoicing.edit', invoice_id=invoice.id) }}">💰</a>
                 <a href="{{ url_for('invoicing.remove', invoice_id=invoice.id) }}">❌</a>
             </td>
         </tr>

@@ -85,4 +85,29 @@ def register(app: Flask) -> Blueprint:
         flash(('info', 'Successfully removed invoice'))
         return redirect(url_for('.home'))
 
+    @bp.route('/edit/<int:invoice_id>', methods=['GET', 'POST'])
+    def edit(invoice_id: int):
+
+        database = DB(current_app)
+
+        if request.method == 'GET':
+            invoice = database.get_invoice(invoice_id)
+            return render_template(
+                'invoicing/edit.html.jinja2',
+                invoice=invoice,
+                invoiced_billing_positions=database.get_invoiced_billing_positions(invoice_id)
+            )
+        
+        date = request.form.get('date')
+
+        try:
+            date = datetime.strptime(date, '%Y-%m-%d')
+        except ValueError as e: 
+            flash(('error', f'The date of {date} is incorrect'))
+            return redirect(url_for('.add'))
+
+        invoiced_billing_positions = request.form.getlist('invoiced_amount[]')
+
+        return abort(500)
+
     app.register_blueprint(bp)
