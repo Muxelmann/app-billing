@@ -1,5 +1,6 @@
 import random
 import hashlib
+from datetime import datetime, date
 
 def optional_float(number: str) -> float | None:
     if number == '':
@@ -30,3 +31,11 @@ def hash_password(raw_password: str) -> str:
     salt = hexdigest(randomstr(8), randomstr(8))[:16]
     hash = hexdigest(salt, raw_password)
     return f'{salt}:{hash}'
+
+def date_to_int(date: datetime | date) -> int:
+    if isinstance(date, datetime):
+        date = date.date()
+    return int(date.strftime('%Y%m%d'))
+            
+def int_to_date(date: int) -> date:
+    return datetime.strptime(f'{date}', '%Y%m%d').date()
