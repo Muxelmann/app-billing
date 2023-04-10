@@ -21,8 +21,8 @@
                 <td>{{ billing_position.date }}</td>
                 <td>{{ billing_position.earned_amount }}</td>
                 <td>
-                    <input type="hidden" name="invoiced_amount[]" value="{{ billing_position.id }}">
-                    <input type="text" name="invoiced_amount[]" value="{{ billing_position.invoiced_amount }}" required>
+                    <input type="hidden" name="billing_position_ids[]" value="{{ billing_position.id }}">
+                    <input type="text" name="billing_position_invoiced_amounts[]" value="{{ billing_position.invoiced_amount }}" required>
                 </td>
                 <td></td>
             </tr>

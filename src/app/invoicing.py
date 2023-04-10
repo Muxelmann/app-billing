@@ -58,12 +58,12 @@ def register(app: Flask) -> Blueprint:
             flash(('error', f'Amount for invoice not valid.'))
             redirect(url_for('.invoice', invoice_id=invoice_id))
 
-        file_ids_to_invoice = [int(id) for id in request.form.getlist('file_id[]')]
-        for index, file_id in enumerate(file_ids_to_invoice):
-            if index < len(file_ids_to_invoice) - 1:
-                database.invoice_billing_position(file_id, 0.0, invoice_id)
+        billing_position_ids_to_invoice = [int(id) for id in request.form.getlist('billing_position_id[]')]
+        for index, billing_position_id in enumerate(billing_position_ids_to_invoice):
+            if index < len(billing_position_ids_to_invoice) - 1:
+                database.invoice_billing_position(billing_position_id, 0.0, invoice_id)
             else:
-                database.invoice_billing_position(file_id, invoice_amount, invoice_id)
+                database.invoice_billing_position(billing_position_id, invoice_amount, invoice_id)
                 flash(('info', f'Successfully invoiced an amount of {invoice_amount}.'))
         return redirect(url_for('.invoice', invoice_id=invoice_id))
 
@@ -106,8 +106,13 @@ def register(app: Flask) -> Blueprint:
             flash(('error', f'The date of {date} is incorrect'))
             return redirect(url_for('.add'))
 
-        invoiced_billing_positions = request.form.getlist('invoiced_amount[]')
+        billing_position_ids = request.form.getlist('billing_position_ids[]')
+        billing_position_invoiced_amounts = request.form.getlist('billing_position_invoiced_amounts[]')
 
-        return abort(500)
+        for billing_position_id, billing_position_invoiced_amount in zip(billing_position_ids, billing_position_invoiced_amounts):
+            database.invoice_billing_position(billing_position_id, billing_position_invoiced_amount, invoice_id)
 
+        flash(('info', f'Successfully edited invoice {invoice_id}'))
+        return redirect(url_for('.home'))
+    
     app.register_blueprint(bp)
